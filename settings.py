@@ -91,7 +91,7 @@ MIDDLEWARE_CLASSES = (
     'visitor.middleware.VisitorMiddleware'
 )
 
-ROOT_URLCONF = 'simalytics.urls'
+ROOT_URLCONF = "%s.urls" % PROJECT_DIRNAME
 
 TEMPLATE_DIRS = (os.path.join(PROJECT_ROOT, 'templates/'),)
 
