@@ -1,0 +1,54 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <title></title>
+    <script type="text/javascript" src="js/jsonp.js"></script>
+    <script type="text/javascript">
+
+        var seen_id;
+        function sendSignal(){
+            document.getElementById("result").innerHTML = "sending...";
+            API_URL = document.getElementById("api_url").value;
+            PROFILE_ID = document.getElementById("profile_id").value;
+            SIGNAL_TYPE = document.getElementById("signal_type").value;
+            if (SIGNAL_TYPE == 0){
+                URL = API_URL + PROFILE_ID;
+                JSONP.get(URL, {}, function(response){
+                    seen_id = response.seen_id;
+                    document.getElementById("result").innerHTML = response.result;
+                    document.getElementById("result").innerHTML += "<br>seen_id:" + response.seen_id;
+                });
+            }
+            if ((SIGNAL_TYPE == 1) && seen_id){
+                URL = API_URL + PROFILE_ID + "/"+ seen_id;
+                JSONP.get(URL, {}, function(response){
+                    document.getElementById("result").innerHTML = response.result;
+                    document.getElementById("content").innerHTML = response.content;
+                });
+            }
+
+        }
+
+    </script>
+</head>
+<body>
+<form>
+    API URL:
+    <input type="text" id="api_url" value="http://localhost:8000/api/opn/"><br>
+    PROFILE_ID
+    <input type="text" id="profile_id" value="1"><br>
+    SEND SIGNAL:
+    <select id="signal_type">
+        <option value="0">See</option>
+        <option value="1">Read</option>
+    </select><br>
+    <input type="button" onclick="sendSignal()" value="SEND">
+
+</form>
+<b>RESULT:</b>
+<div id="result"></div>
+<b>CONTENT:</b>
+<div id="content"></div>
+</body>
+</html>

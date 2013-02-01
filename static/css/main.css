@@ -1,0 +1,123 @@
+@import url('https://fonts.googleapis.com/css?family=Lobster');
+    html, body {height: 100%;}
+    * { padding:0; margin:0; }
+    html, body { height:100%; }
+    #tbl_container { height:100%; border-collapse:collapse; align:center; width:960px }
+    .bottombar {
+        height: 70px;
+        padding-top:120px;
+    }
+    .container-fluid{
+    }
+    .foot-container{
+        text-align:center;
+        padding-bottom: 5px;
+    }
+    .content{
+        margin-left: 210px;
+        margin-top: 28px;
+
+    }
+    .row-fluid > .sidebar{
+        width:200px;
+        margin-top: 30px;
+        float: left;
+    }
+
+    .carousel .item > img {
+        width: 100%;
+    }
+
+    .slide-caption{
+        position: absolute;
+        right: 0;
+        left: 0;
+        padding: 10px 15px 5px;
+        background: #333333;
+        background: rgba(0, 0, 0, 0.75);
+        height:80px;
+        right:0;
+        top:0;
+    }
+
+    .slide-caption h2, side-caption h3, .side-caption h4,
+    .slide-caption p {
+        color: #ffffff;
+    }
+    
+    .slide-control {
+        position: absolute;
+        top: 40%;
+        left: 15px;
+        width: 40px;
+        height: 40px;
+        margin-top: 170px;
+        font-size: 60px;
+        font-weight: 100;
+        line-height: 30px;
+        color: #ffffff;
+        text-align: center;
+        background: #222222;
+        border: 3px solid #ffffff;
+        -webkit-border-radius: 23px;
+        -moz-border-radius: 23px;
+        border-radius: 23px;
+        opacity: 0.5;
+        filter: alpha(opacity=50);
+    }
+
+    .slide-control.right {
+        right: 15px;
+        left: auto;
+    }
+
+    .slide-control:hover {
+        color: #ffffff;
+        text-decoration: none;
+        opacity: 0.9;
+        filter: alpha(opacity=90);
+    }
+
+    .banner-unit {
+        padding: 25px;
+        margin-bottom: 20px;
+        background-color: #eeeeee;
+        -webkit-border-radius: 6px;
+        -moz-border-radius: 6px;
+        border-radius: 6px;
+    }
+
+    .banner-unit h1 {
+        margin-bottom: 0;
+        font-size: 50px;
+        line-height: 1;
+        letter-spacing: -1px;
+        color: inherit;
+    }
+
+    .banner-unit p {
+        font-size: 18px;
+        font-weight: 200;
+        line-height: 27px;
+        color: inherit;
+    }
+
+    #logo{
+        font-family:'Lobster',cursive;
+        font-weight:normal;
+        text-rendering:optimizelegibility;
+        font-size:45px;line-height:20px;
+        padding-bottom: 5px;
+        padding-right:20px;
+        color: #D44413;
+    }
+    #logo_description{
+        padding-left:40px;
+        margin-bottom: 10px;
+    }
+    .content_profiles_list{
+        margin-top: 10px;
+    }
+    #htmlSource{
+        width:700px;
+    }

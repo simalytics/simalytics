@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<legend>Content profiles</legend>
+<p>Create new profile or view an existing profile</p>
+
+<a href="{% url content_profile_add %}" class="btn btn-primary">Create Profile</a>
+
+
+<table class='table table-bordered table-striped content_profiles_list'>
+{% for content_profile in content_profiles %}
+<tr>
+    <td><a href="{% url content_profile_view id=content_profile.id %}">{{ content_profile.name }}</a></td>
+</tr>
+{% endfor %}
+</table>
+
+<div class="pagination">
+    <ul>
+        {% if content_profiles.has_previous %}
+            <li><a href="?page={{ content_profiles.previous_page_number }}">«</a></li>
+        {% endif %}
+            <li class="disabled">
+                <a>{{ content_profiles.number }} of {{ content_profiles.paginator.num_pages }}</a>
+            </li>
+        {% if content_profiles.has_next %}
+            <li><a href="?page={{ content_profiles.next_page_number }}">»</a></li>
+        {% endif %}
+    </ul>
+</div>
+{% endblock %}
+{% block bottom-bar %}
+
+        <td valign="bottom">
+            <div class="bottombar" >
+                <div class="bottombar-inner">
+                    <div class="foot-container">
+                      <hr/>
+                        <a href="/legal/">Legal</a>&nbsp;|&nbsp;<a href="/privacy_policy/">Privacy Policy</a>&nbsp;|&nbsp;<a href="/contact/">Contact</a>
+                    </div>
+                </div>
+            </div>
+
+        </td>
+{% endblock %}

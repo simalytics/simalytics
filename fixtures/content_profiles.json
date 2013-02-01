@@ -1,0 +1,1 @@
+[{"pk": 1, "model": "content_profiles.contentprofile", "fields": {"url": "http://tt.tt/", "content": "content text", "name": "test", "created_by": 2, "created_date": "2012-06-12"}}, {"pk": 2, "model": "content_profiles.contentprofile", "fields": {"url": "http://example.com/", "content": "example com content", "name": "example", "created_by": 3, "created_date": "2012-06-12"}}]

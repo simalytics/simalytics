@@ -1,0 +1,44 @@
+@import url('https://fonts.googleapis.com/css?family=Lobster');
+    html, body {height: 100%;}
+    * { padding:0; margin:0; }
+    html, body { height:100%; }
+    #tbl_container { height:100%; border-collapse:collapse; align:center; width:960px }
+    .bottombar {
+        height: 70px;
+        padding-top:20px;
+    }
+    .container-fluid{
+    }
+    .foot-container{
+        text-align:center;
+        padding-bottom: 5px;
+    }
+    .content{
+        margin-left: 210px;
+        margin-top: 28px;
+
+    }
+    .row-fluid > .sidebar{
+        width:200px;
+        margin-top: 30px;
+        float: left;
+    }
+    #logo{
+        font-family:'Lobster',cursive;
+        font-weight:normal;
+        text-rendering:optimizelegibility;
+        font-size:45px;line-height:20px;
+        padding-bottom: 5px;
+        padding-right:20px;
+        color: #D44413;
+    }
+    #logo_description{
+        padding-left:40px;
+        margin-bottom: 10px;
+    }
+    .content_profiles_list{
+        margin-top: 10px;
+    }
+    #htmlSource{
+        width:700px;
+    }

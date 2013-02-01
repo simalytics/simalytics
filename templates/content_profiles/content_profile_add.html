@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block head %}
+    {{ form.media }}
+{% endblock %}
+{% block content %}
+    {% crispy form %}
+
+    <script type="text/javascript">
+
+    </script>
+{% endblock %}
+{% block bottom-bar %}
+
+        <td valign="bottom">
+            <div class="bottombar" >
+                <div class="bottombar-inner">
+                    <div class="foot-container">
+                      <hr/>
+                        <a href="/legal/">Legal</a>&nbsp;|&nbsp;<a href="/privacy_policy/">Privacy Policy</a>&nbsp;|&nbsp;<a href="/contact/">Contact</a>
+                    </div>
+                </div>
+            </div>
+
+        </td>
+{% endblock %}

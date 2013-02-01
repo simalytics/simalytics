@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Track your content</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
+    <link href="/static/css/main.css" rel="stylesheet">
+    <link href="/static/css/bootstrap-responsive.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/js/bootstrap.min.js"></script>
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+      {% block head %}{% endblock %}
+  </head>
+
+<body>
+<center>
+<table id="tbl_container">
+    <tr>
+        <td valign="top">
+            <div class="container-fluid">
+                <div class="row-fluid">
+                    <div class="sidebar">
+                        <h1 id="logo">Track.me</h1>
+                        <div id="logo_description">track you content</div>
+                        {% block sidebar %}{% endblock %}
+                    </div>
+                    <div class="content">
+                      {% if user.is_authenticated %}
+                        <ul class="breadcrumb">
+                            {% block breadcrumbs %}
+                            <li>
+                                {% for breadcrumb in request.breadcrumbs %}
+                                    {% if not forloop.last %}
+                                        <li><a href="{{ breadcrumb.url }}">{{ breadcrumb.name }}</a><span class="divider">/</span></li>
+                                    {% else %}
+                                        <li class="active">{{ breadcrumb.name }}</li>
+                                    {% endif %}
+                                {% endfor %}
+                            </li>
+                            {% endblock %}
+                            <li class="pull-right">
+                                {% if user.is_authenticated %}
+                                    logged in as <a href="{% url auth_password_change %}">{% firstof user.email user.username %}</a>
+                                    <a class="brand" href="#">
+                                        <a href="{% url auth_logout %}">Log out</a>
+                                    </a>
+                                {% endif %}
+                            </li>
+                        </ul>
+                        {% endif %}
+                        {% block content %}{% endblock %}
+                    </div>
+                </div>
+            </div>
+
+        </td>
+    </tr>
+    <tr>
+        <td valign="bottom">
+            <div class="bottombar" >
+                <div class="bottombar-inner">
+                    <div class="foot-container">
+                        <a href="/legal/">Legal</a>&nbsp;|&nbsp;<a href="/privacy_policy/">Privacy Policy</a>&nbsp;|&nbsp;<a href="/contact/">Contact</a>
+                    </div>
+                </div>
+            </div>
+
+        </td>
+    </tr>
+</table>
+</center>
+</body>
+</html>

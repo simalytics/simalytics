@@ -1,0 +1,6 @@
+{{site}} registration
+
+To activate your account please click link below:
+http://{{ site }}/accounts/activate/{{ activation_key }}/
+
+Thank you!

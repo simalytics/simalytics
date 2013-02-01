@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block breadcrumbs %}
+    <li>
+    <li><a href="/">Home</a><span class="divider">/</span></li>
+    <li class="active">Log in</li>
+    </li>
+{% endblock %}
+{% block content %}
+    {% if user.is_authenticated %}
+    You are already logged in as, {{ user.email }}
+
+    {% else %}
+
+    {% crispy form %}
+
+
+    {% endif %}
+{% endblock %}

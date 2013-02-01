@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block head %}
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" src="/static/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="/static/js/bootstrap-tab.js"></script>
+{% endblock %}
+{% block sidebar %}
+    <div class="well">
+    {% crispy form %}
+    </div>
+    <div class="well">
+        <legend>News</legend>
+        <div><b>12.02</b> hfhfkfk kfkf kfkf</div>
+        <div><b>12.05</b> another article</div>
+        <div><b>12.05</b> another one article</div>
+        <div><b>12.05</b> another one article</div>
+    </div>
+{% endblock %}
+{% block content %}
+    <div class="container-fluid">
+      <div class="span">
+    <a href="{% url registration_register %}" class="btn btn-primary pull-right">Sign Up</a>
+    <ul class="nav nav-tabs" id="myTab">
+      <li class="active"><a href="#home">Home</a></li>
+      <li><a href="#profile">How it works</a></li>
+    </ul>
+
+    <div class="tab-content">
+      <div class="tab-pane active" id="home">
+        <div class="hero-unit">
+        <h1>Postalytics</h1>
+        <p>The Standard for Valuation</p>
+        </div>
+      <div class="row-fluid">
+        <div class="span4">
+          <h3>Value Your Posts</h3>
+          <p>Monitor the valuation of your blog posts or any articles and adjust your revenue strategy.</p>
+        </div>
+        <div class="span4">
+          <h3>Know Your Readers</h3>
+          <p>Pinpoint the topics that are highly valued by your readers and understand your readers' real interests.</p>
+        </div>
+        <div class="span4">
+          <h3>It's Free!</h3>
+          <p>This is a free service and anyone can join, so why not? Support us by spreading the word about our existence!</p>
+        </div>
+      </div>
+      </div>
+      <div class="hero-unit tab-pane" id="profile">.ccccccc.</div>
+    </div>
+    </div>
+    <script>
+//      $(function () {
+//        $('#myTab a:first').tab('show');
+//      });
+      $('#myTab a').click(function (e) {
+        e.preventDefault();
+        $(this).tab('show');
+      })
+    </script>
+{% endblock %}
