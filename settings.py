@@ -91,7 +91,7 @@ MIDDLEWARE_CLASSES = (
     'visitor.middleware.VisitorMiddleware'
 )
 
-ROOT_URLCONF = "%s.urls" % PROJECT_ROOT
+ROOT_URLCONF = "urls" 
 
 TEMPLATE_DIRS = (os.path.join(PROJECT_ROOT, 'templates/'),)
 
