@@ -14,6 +14,7 @@ PROJECT_ROOT = os.path.realpath(
 
 ADMINS = (
      ('Michael Chan', 'michaelc@simalytics.com'),
+     ('Mike Gill', 'mikeg@simalytics.com'),
 )
 
 MANAGERS = ADMINS
