@@ -6,7 +6,7 @@ setup(
     packages=['api', 'content_profiles', 'enhanced_accounts'],
     url='',
     license='',
-    author='michae1',
-    author_email='qotsaman@gmail.com',
+    author='Michael Chan',
+    author_email='michaelc@simalytics.com',
     description=''
 )
