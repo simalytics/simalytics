@@ -13,7 +13,7 @@ PROJECT_ROOT = os.path.realpath(
     os.path.join(os.path.dirname(__file__)))
 
 ADMINS = (
-    # ('Your Name', 'your_email@domain.com'),
+     ('Michael Chan', 'michaelc@simalytics.com'),
 )
 
 MANAGERS = ADMINS
