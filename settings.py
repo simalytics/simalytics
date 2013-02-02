@@ -115,16 +115,12 @@ INSTALLED_APPS = (
     'south',
     'django.contrib.admin',
 
-    #3rd party apps
+    # 3rd party apps
     'registration',
     'crispy_forms',
     'social_auth',
     'tinymce',
     'visitor',
-
-    # simalytics applications:
-    #'simalytics.api',
-    #'simalytics.content_profiles'
 )
 
 AUTHENTICATION_BACKENDS = (
@@ -137,7 +133,7 @@ LOGIN_REDIRECT_URL = '/'
 FACEBOOK_APP_ID              = '123640527811139'
 FACEBOOK_API_SECRET          = 'b92913be91d7e17fe1f437edafc82aa4'
 
-EMAIL_HOST='smtp1.bethere.co.uk'
+EMAIL_HOST=''
 EMAIL_PORT=25
 EMAIL_USE_TLS=False
 DEFAULT_FROM_EMAIL='michaelc@simalytics.com'
@@ -149,7 +145,7 @@ ACCOUNT_ACTIVATION_DAYS = 5
 COOKIE_DOMAIN = None # .domain.com
 COOKIE_MAX_AGE = 31536000
 
-# Displaing:
+# Displaying:
 PROFILES_PER_PAGE = 25
 
 BREADCRUMBS_AUTO_HOME = True
