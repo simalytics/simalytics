@@ -88,6 +88,7 @@ MIDDLEWARE_CLASSES = (
     'breadcrumbs.middleware.BreadcrumbsMiddleware',
     'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
     'breadcrumbs.middleware.FlatpageFallbackMiddleware',
+    'middleware.SessionInitMiddleware',
     'visitor.middleware.VisitorMiddleware'
 )
 
