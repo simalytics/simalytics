@@ -124,8 +124,8 @@ INSTALLED_APPS = (
     'visitor',
 
     # simalytics applications:
-    'simalytics.api',
-    'simalytics.content_profiles'
+    #'simalytics.api',
+    #'simalytics.content_profiles'
 )
 
 AUTHENTICATION_BACKENDS = (
