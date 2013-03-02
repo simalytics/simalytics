@@ -13,6 +13,10 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 import logging
+from bs4 import BeautifulSoup
+import urllib
+
+import inspect
 
 @login_required()
 def content_profile_list(request):
@@ -46,14 +50,28 @@ def content_profile_add(request):
         if content_profile_form.is_valid():
             new_profile = content_profile_form.save(commit=False)
             new_profile.created_by = request.user
-            new_profile.save()
-            return HttpResponseRedirect(reverse('content_profiles_list'))
 
+            # Retrieve page title
+            pageStructure = BeautifulSoup(urllib.urlopen(new_profile.url));
+            if not pageStructure:
+                # TODO return helpful error message to client
+                print "Could not retrieve"
+            title = pageStructure.head.title
+            if not title:
+                # TODO return helpful error message to client
+                print "Could not retrieve title for %s" % new_profile.url
+            
+            new_profile.name = title.renderContents()
+            new_profile.save()
+
+            return HttpResponseRedirect(reverse('content_profiles_list'))
+        else:
+            print "Invalid form submitted"
+            # TODO return helpful error message to client
     request.breadcrumbs([
         ("Profiles", reverse('content_profiles_list')),
         ('New Profile', ''),
     ])
-
 
     return render_to_response('content_profiles/content_profile_add.html',
         {'form': content_profile_form},
@@ -62,12 +80,16 @@ def content_profile_add(request):
 
 @login_required()
 def content_profile_view(request, id):
+    print "Viewing %s" % id
+    
     try:
         content_profile = ContentProfile.objects.get(pk = id)
+        
         daysago6 = datetime.today() - timedelta(days=6)
         stats = Action.objects.filter(profile=content_profile.pk, action_datetime__gte=daysago6,action_datetime__lte=datetime.today()).extra({'action_datetime' : "date(action_datetime)"}).values('action_datetime').annotate(seen=Sum('is_seen'),read=Sum('is_read')).order_by('action_datetime')
         pstats = list()
         curdate = daysago6
+        
         if stats:
             for stat in stats:
                 gapsize = (datetime.strptime(stat['action_datetime'],'%Y-%m-%d')-curdate).days
@@ -94,6 +116,8 @@ def content_profile_view(request, id):
                     pstats.append({'action_datetime':dg, 'seen':0, 'read':0})
 
     except Exception, e:
+        # TODO: replace with proper logging! :@
+        print "Error retrieving profile! [%s]" % e
         raise Http404
 
 

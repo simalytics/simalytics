@@ -13,15 +13,18 @@ class ContentProfileAddForm(forms.ModelForm):
         self.helper.layout = Layout(
             Fieldset(
                 'Add new profile',
-                'name',
-                'url',
-                'content',
+                'url'
             ),
             FormActions(
-                Submit('submit', 'Submit', css_class='button btn-primary'),
-
+                Submit('submit', 'Submit', css_class='button btn-primary')
             )
         )
         super(ContentProfileAddForm, self).__init__(*args, **kwargs)
+        
+        # Gets around the fact that name & content are part of the model, but 
+        # aren't part of the form.
+        # Too hacky?
+        for key in self.fields:
+            self.fields[key].required = False
     class Meta:
         model = ContentProfile
