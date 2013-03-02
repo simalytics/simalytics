@@ -51,6 +51,9 @@ urlpatterns += patterns('',
                  name='auth_password_change'),
 
 
+    url(r'^accounts/logout/$', 'django.contrib.auth.views.logout',
+                          {'next_page': '/'}),
+
     (r'^accounts/', include('registration.backends.default.urls')),
     (r'^tinymce/', include('tinymce.urls')),
     (r'', include('social_auth.urls')),
