@@ -4,7 +4,7 @@ from django.conf import settings
 from api import ACTION_TYPES
 from api.models import Action
 from content_profiles.forms import ContentProfileAddForm
-from content_profiles.models import ContentProfile
+from content_profiles.models import ContentProfile, ContentProfileStatus
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.urlresolvers import reverse
 from django.db.models.aggregates import Count, Sum
@@ -15,6 +15,7 @@ from django.contrib.auth.decorators import login_required
 import logging
 from bs4 import BeautifulSoup
 import urllib
+import time
 
 import inspect
 
@@ -62,6 +63,13 @@ def content_profile_add(request):
                 print "Could not retrieve title for %s" % new_profile.url
             
             new_profile.name = title.renderContents()
+            
+            # Private key generation (currently just sys time)
+            pKey = int(round(time.time() * 1000)) # TODO: FIX!
+            new_profile.privateKey = pKey
+
+            new_profile.status = 0
+
             new_profile.save()
 
             return HttpResponseRedirect(reverse('content_profiles_list'))
@@ -119,7 +127,6 @@ def content_profile_view(request, id):
         # TODO: replace with proper logging! :@
         print "Error retrieving profile! [%s]" % e
         raise Http404
-
 
     request.breadcrumbs([
         ("Profiles", reverse('content_profiles_list')),
