@@ -11,5 +11,3 @@ class Action(models.Model):
     visitor = models.ForeignKey(Visitor, blank=True, null=True)
     is_seen = models.BooleanField(default=False)
     is_read = models.BooleanField(default=False)
-
-
