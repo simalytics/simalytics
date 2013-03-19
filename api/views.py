@@ -9,7 +9,8 @@ from django.shortcuts import render_to_response
 from django.http import HttpResponseRedirect, Http404
 from pcu.pcu_model import PCU
 from django.views.decorators.csrf import csrf_exempt              
-from django.contrib.sites.models import Site                            
+from django.contrib.sites.models import Site
+from user_accounts.account_model import GuestSession                            
 
 def init_request(request, expectedMethod):
     if (request.method != expectedMethod):
@@ -17,6 +18,7 @@ def init_request(request, expectedMethod):
         return HttpResponse(status = 405)
 
     try :
+        print request.body
         if len(request.body) > 0:
             return json.loads(request.body)
     except Exception, e:
@@ -37,12 +39,20 @@ def get_profile(request):
     return profile
 
 def check_keys(json, expectedKeys):
+    if not json and len(expectedKeys) == 0:
+        return True
+    elif not json and len(expectedKeys) > 0:
+        return False
+    
     for key in expectedKeys:
         if not key in json:
             print "Missing key: [%s]" % key
             return False
         
     return True
+
+def generate_response(obj, statusCode):
+    return HttpResponse(json.dumps(obj), "application/json", status = statusCode)
 
 def api_operation_see(request, profile_id):
     callback = request.GET.get('callback', '')
@@ -98,7 +108,7 @@ def api_operation_pcu_register(request):
     
     if isinstance(o, HttpResponse):
         return o
-    else :
+    else:
         json = o
     
     if not check_keys(json, [ "url", "pcuIdentifier" ]):
@@ -110,14 +120,15 @@ def api_operation_pcu_register(request):
     # Store the new PCU
     pcu = PCU()
     pcu.url = url
-    pcu.publicKey = "<placeholder>"
+    pcu.publicKey = "<placeholder>" # TODO: generate!
     pcu.pcuIdentifier = ident
     pcu.profile = profile
     pcu.save()
     
-    return HttpResponse(mimetype="text/plain; Location: /api/opn/pcu/%d" % pcu.id, status = 201)
+    return generate_response()
+    return HttpResponse(mimetype="text/plain; Location: /api/opn/pcu/%s" % pcu.publicKey, status = 201)
 @csrf_exempt 
-def api_operation_pcu_delete(request, pcu_id):
+def api_operation_pcu_delete(request, pcu_pub_key):
     print "PCU-Delete"
     o = init_request(request, "DELETE")
     if isinstance(o, HttpResponse):
@@ -128,9 +139,9 @@ def api_operation_pcu_delete(request, pcu_id):
         return HttpResponse(status = 401)
     
     try :
-        pcu = PCU.objects.get(pk = pcu_id)
+        pcu = PCU.objects.get(publicKey = pcu_pub_key)
     except Exception, e:
-        print "Error obtaining PCU [%d]: %s" % pcu_id % e
+        print "Error obtaining PCU [%d]: %s" % pcu_pub_key % e
         return HttpResponse(status = 401) # Mask the fact that the PCU does not exist.
     
     if pcu:
@@ -141,14 +152,50 @@ def api_operation_pcu_delete(request, pcu_id):
         
     return HttpResponse(status = 200)
     
-@csrf_exempt 
-def api_operation_pcu_visit(request, pcu_id):
+@csrf_exempt
+def api_operation_pcu_list(request):
+    print "PCU-List"
+
+@csrf_exempt    
+def api_operation_pcu_get(request, pcu_pub_key):
+    print "PCU-Get"
+    
+@csrf_exempt
+def api_operation_pcu_visit(request, guest_session_id, url):
     # a.k.a Click
     print "PCU-Visit"
 
+@csrf_exempt     
+def api_operation_pcu_click(request, guest_session_id, url):
+    print "PCU-Click"
+    
+@csrf_exempt 
 def api_operation_render_overlay(request, pcu_id):
     print "Render-Overlay"
 
 @csrf_exempt 
 def api_operation_client_session_init(request):
     print "Client-Session-Init"
+    o = init_request(request, "GET")
+    
+    if isinstance(o, HttpResponse):
+        return o
+    
+    if request.META["HTTP_UNIT_KEY"]:
+        pcuPublicKey = request.META["HTTP_UNIT_KEY"]
+    else:
+        return generate_response({ "error": "Missing unit key" }, 400)
+    
+    try:
+        pcu = PCU.objects.get(publicKey = pcuPublicKey)
+    except Exception, e:
+        print "Error retrieving PCU with public key [%s]: %s" % (pcuPublicKey, e)
+        return HttpResponse(status = 401)
+    
+    gSession = GuestSession()
+    gSession.profile = pcu.profile
+    gSession.externalIdent = "<placeholder>"
+    gSession.sourceIp = request.META["REMOTE_ADDR"]
+    gSession.save()
+    
+    return generate_response({ "sessionId": gSession.externalIdent }, 201)
