@@ -7,20 +7,22 @@ from api.models import Action
 from content_profiles.models import ContentProfile
 from django.shortcuts import render_to_response
 from django.http import HttpResponseRedirect, Http404
-from pcu.pcu_model import PCU
+from pcu.pcu_model import PCU, PCUAction, PCUInteraction, PCUInteractionData
 from django.views.decorators.csrf import csrf_exempt              
 from django.contrib.sites.models import Site
 from user_accounts.account_model import GuestSession                            
 
 def init_request(request, expectedMethod):
     if (request.method != expectedMethod):
-        #print "URL [%s] expected method [%s], received [%s]" % request.path % expectedMethod % request.method
+        print "URL [%s] expected method [%s], received [%s]" % (request.path, expectedMethod, request.method)
         return HttpResponse(status = 405)
 
     try :
         print request.body
         if len(request.body) > 0:
             return json.loads(request.body)
+        else:
+            print "No request body."
     except Exception, e:
         print "Error parsing JSON: [%s]" % e.message
         return HttpResponse(status = 400)
@@ -53,6 +55,42 @@ def check_keys(json, expectedKeys):
 
 def generate_response(obj, statusCode):
     return HttpResponse(json.dumps(obj), "application/json", status = statusCode)
+
+def store_pcu_interaction(request, guestSessionIdent, pcu, actionCode, userProfile):
+    if userProfile != None and pcu.profile.id != userProfile.id:
+        return generate_response({ "error": "PCU not attached to profile" }, 401)
+    
+    sessionId = guestSessionIdent
+    try:
+        guestSession = GuestSession.objects.get(externalIdent = sessionId)
+    except Exception, e:
+        print "Error retrieving guest session with external ident [%s]: %s" % (sessionId, e)
+        return HttpResponse(status = 401)
+    
+    if userProfile != None and guestSession.profile != userProfile:
+        print "Profile [%s] not attached to guest session [%s]" % (pcu.publicKey, guestSession.externalIdent)
+        return HttpResponse(status = 401)
+    
+    try:
+        try:
+            action = PCUAction.objects.get(code = actionCode)
+        except Exception, e:
+            print "Error retrieving action for code [%s]: %s" % (actionCode, e)
+            return generate_response({ "error": "Invalid action: [%s]" % actionCode }, 422)
+        
+        interaction = PCUInteraction()
+        interaction.pcu = pcu
+        interaction.action = action
+        interaction.session = guestSession
+        interaction.save()
+        
+        interactionData = PCUInteractionData()
+        interactionData.interaction = interaction
+        interactionData.httpHeaders = request.META
+        interactionData.save()
+    except Exception, e:
+        print "Error storing interaction with PCU [%s]: %s" % (pcu.publicKey, e)
+        return HttpResponse(status = 500)
 
 def api_operation_see(request, profile_id):
     callback = request.GET.get('callback', '')
@@ -155,23 +193,124 @@ def api_operation_pcu_delete(request, pcu_pub_key):
 @csrf_exempt
 def api_operation_pcu_list(request):
     print "PCU-List"
+    
+    o = init_request(request, "GET")
+    if isinstance(o, HttpResponse):
+        return o
+    
+    userProfile = get_profile(request)
+    if userProfile == None:
+        return HttpResponse(status = 401)
+    
+    output = []
+    
+    profileUnits = PCU.objects.filter(profile = userProfile)
+    for pcu in profileUnits:
+        output.append({
+            "url": pcu.url,
+            "pcuIdentifier": pcu.pcuIdentifier,
+            "publicKey": pcu.publicKey
+            #"created": pcu.created           
+        })
+
+    return generate_response(output, 200)
 
 @csrf_exempt    
 def api_operation_pcu_get(request, pcu_pub_key):
     print "PCU-Get"
     
+    o = init_request(request, "GET")
+    if isinstance(o, HttpResponse):
+        return o
+    
+    profile = get_profile(request)
+    if profile == None:
+        return HttpResponse(status = 400)
+    
+    try :
+        pcu = PCU.objects.get(publicKey = pcu_pub_key)
+    except Exception, e:
+        print "Error retrieving PCU for public key [%s]: %s" % (pcu_pub_key, e)
+        return HttpResponse(status = 401)
+    
+    responseObj = {
+        "url": pcu.url,
+        "pcuIdentifier": pcu.pcuIdentifier,
+        "publicKey": pcu.publicKey,
+        "created": pcu.created
+    }
+    
+    return generate_response(responseObj, 200)
+    
 @csrf_exempt
 def api_operation_pcu_visit(request, guest_session_id, url):
-    # a.k.a Click
+    # Page view
     print "PCU-Visit"
 
 @csrf_exempt     
-def api_operation_pcu_click(request, guest_session_id, url):
+def api_operation_pcu_click(request, pcu_pub_key):
     print "PCU-Click"
     
+    o = init_request(request, "POST")
+    if isinstance(o, HttpResponse):
+        return o
+    else :
+        json = o
+
+    try:
+        pcu = PCU.objects.get(publicKey = pcu_pub_key)
+    except Exception, e:
+        print "Error retrieving PCU for public key [%s]: %s" % (pcu_pub_key, e)
+        
+    if not check_keys(json, [ "guestSessionIdent", "action" ]):
+        return HttpResponse(status = 422)
+    
+    sessionId = json["guestSessionIdent"]
+    actionCode = json["action"]
+    
+    storeResponse = store_pcu_interaction(request, sessionId, pcu, actionCode, None)
+    if storeResponse:
+        return storeResponse
+    else:
+        return generate_response({
+              "clickUrl": "/api/opn/pcu/%s/click" % pcu_pub_key
+        }, 200)
+    
+    return generate_response({
+          "clickUrl": "/api/opn/pcu/%s/click" % pcu_pub_key
+    }, 200)
+    
 @csrf_exempt 
-def api_operation_render_overlay(request, pcu_id):
+def api_operation_render_overlay(request, pcu_pub_key):
     print "Render-Overlay"
+    
+    o = init_request(request, "POST")
+    if isinstance(o, HttpResponse):
+        return o
+    else :
+        json = o
+
+    userProfile = get_profile(request)
+    if userProfile == None:
+        return HttpResponse(status = 401)
+    
+    try:
+        pcu = PCU.objects.get(publicKey = pcu_pub_key)
+    except Exception, e:
+        print "Error retrieving PCU for public key [%s]: %s" % (pcu_pub_key, e)
+        
+    if not check_keys(json, [ "guestSessionIdent" ]):
+        return HttpResponse(status = 422)
+    
+    guestSessionIdent = json["guestSessionIdent"];
+    
+    storeResponse = store_pcu_interaction(request, guestSessionIdent, pcu, "OVERLAY_REQUEST", userProfile)
+    if storeResponse:
+        return storeResponse
+    else:
+        return generate_response({
+              "clickUrl": "/api/opn/pcu/%s/click" % pcu_pub_key
+        }, 200)
 
 @csrf_exempt 
 def api_operation_client_session_init(request):
@@ -186,16 +325,25 @@ def api_operation_client_session_init(request):
     else:
         return generate_response({ "error": "Missing unit key" }, 400)
     
+    sourceIp = request.META["REMOTE_ADDR"]
+    
+    print "Generating session from %s for PCU pub key %s." % (sourceIp, pcuPublicKey)
+    
     try:
         pcu = PCU.objects.get(publicKey = pcuPublicKey)
     except Exception, e:
         print "Error retrieving PCU with public key [%s]: %s" % (pcuPublicKey, e)
         return HttpResponse(status = 401)
     
-    gSession = GuestSession()
-    gSession.profile = pcu.profile
-    gSession.externalIdent = "<placeholder>"
-    gSession.sourceIp = request.META["REMOTE_ADDR"]
-    gSession.save()
+    # Generate & store the session
+    try:
+        gSession = GuestSession()
+        gSession.profile = pcu.profile
+        gSession.externalIdent = "<placeholder>"
+        gSession.sourceIp = sourceIp
+        gSession.save()
+    except Exception, e:
+        print "Error saving guest session. %s" % e
+        return HttpResponse(status = 500)
     
     return generate_response({ "sessionId": gSession.externalIdent }, 201)
