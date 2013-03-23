@@ -15,7 +15,7 @@ class PCU(models.Model):
     publicKey = models.TextField(db_column="PUBLIC_KEY")
     url = models.URLField(db_column="URL")
     pcuIdentifier = models.TextField(db_column="PCU_IDENTIFIER")
-    created = models.DateTimeField(db_column = "CREATED")
+    created = models.DateTimeField(auto_now = True, db_column = "CREATED")
     modified = models.DateTimeField(db_column = "MODIFIED")
     #status = models.ForeignKey(PCUStatus, db_column = "STATUS_ID")
     status = models.IntegerField(db_column = "STATUS_ID")
@@ -43,7 +43,7 @@ class PCUAction(models.Model):
 
 class PCUInteraction(models.Model):
     pcu = models.ForeignKey(PCU, editable=False, db_column="PCU_ID")
-    interactionTime = models.DateTimeField(db_column="INTERACTION_TIME")
+    interactionTime = models.DateTimeField(auto_now = True, db_column="INTERACTION_TIME")
     action = models.ForeignKey(PCUAction, db_column = "ACTION_ID")
     session = models.ForeignKey(GuestSession, db_column = "SESSION_IDENT")
     

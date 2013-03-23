@@ -7,10 +7,13 @@ from api.models import Action
 from content_profiles.models import ContentProfile
 from django.shortcuts import render_to_response
 from django.http import HttpResponseRedirect, Http404
-from pcu.pcu_model import PCU, PCUAction, PCUInteraction, PCUInteractionData
+from pcu.pcu_model import PCU, PCUAction, PCUInteraction, PCUInteractionData,\
+    PCUAnalytics
 from django.views.decorators.csrf import csrf_exempt              
 from django.contrib.sites.models import Site
-from user_accounts.account_model import GuestSession                            
+from user_accounts.account_model import GuestSession     
+from datetime import datetime
+from traceback import print_exc
 
 def init_request(request, expectedMethod):
     if (request.method != expectedMethod):
@@ -56,18 +59,61 @@ def check_keys(json, expectedKeys):
 def generate_response(obj, statusCode):
     return HttpResponse(json.dumps(obj), "application/json", status = statusCode)
 
+def generate_analytics(pcu, action, time):
+    try:
+        hour = datetime(time.year,
+                        time.month,
+                        time.day,
+                        time.hour,
+                        0)
+        
+        # Attempt to get an existing analytics record:
+        record = None
+        try:
+            record = PCUAnalytics.objects.get(pcu = pcu.id, hour = hour)
+        except Exception, e:
+            print "Error retrieving existing analytics record for PCU %d, hour %s (may not exist): %s" % (pcu.id, hour, e)
+        
+        if not record:
+            record = PCUAnalytics()
+            record.pcu = pcu
+            record.hour = hour
+            
+        if action.code == "OVERLAY_REQUEST":
+            record.overlayOpenClicks = (record.overlayOpenClicks + 1) if record.overlayOpenClicks else 1
+        elif action.code == "CLICK_PAY":
+            record.acceptClicks = (record.acceptClicks + 1) if record.acceptClicks else 1
+        elif action.code == "CLICK_CANCEL":
+            record.declineClicks = (record.declineClicks + 1) if record.declineClicks else 1
+        elif action.code == "CLICK_MORE_INFO":
+            record.moreInformationClicks = (record.moreInformationClicks + 1) if record.moreInformationClicks else 1
+        
+        record.save()   
+    except Exception, e:
+        print "Error storing analytics: %s" % e
+        print_exc()
+        raise e
+
 def store_pcu_interaction(request, guestSessionIdent, pcu, actionCode, userProfile):
-    if userProfile != None and pcu.profile.id != userProfile.id:
-        return generate_response({ "error": "PCU not attached to profile" }, 401)
-    
     sessionId = guestSessionIdent
     try:
         guestSession = GuestSession.objects.get(externalIdent = sessionId)
     except Exception, e:
         print "Error retrieving guest session with external ident [%s]: %s" % (sessionId, e)
         return HttpResponse(status = 401)
+
+    if not userProfile:
+        try:
+            userProfile = ContentProfile.objects.get(pk = guestSession.profile.id)
+            print "Retrieved profile %s for guest session ID %s" % (userProfile.id, sessionId)
+        except Exception, e:
+            print "Error retrieving profile attached to guest session %s: %s" % (sessionId, e)
+            return HttpResponse(status = 401)
     
-    if userProfile != None and guestSession.profile != userProfile:
+    if pcu.profile.id != userProfile.id:
+        return generate_response({ "error": "PCU not attached to profile" }, 401)
+    
+    if guestSession.profile != userProfile:
         print "Profile [%s] not attached to guest session [%s]" % (pcu.publicKey, guestSession.externalIdent)
         return HttpResponse(status = 401)
     
@@ -88,6 +134,8 @@ def store_pcu_interaction(request, guestSessionIdent, pcu, actionCode, userProfi
         interactionData.interaction = interaction
         interactionData.httpHeaders = request.META
         interactionData.save()
+        
+        generate_analytics(pcu, action, datetime.now())
     except Exception, e:
         print "Error storing interaction with PCU [%s]: %s" % (pcu.publicKey, e)
         return HttpResponse(status = 500)

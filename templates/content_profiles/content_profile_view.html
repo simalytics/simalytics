@@ -8,13 +8,21 @@
     <h3>Profile name</h3>
     <p>{{ content_profile.name }}</p>
     <h3>Website URL</h3>
-    <p>{{ content_profile.url }}</p>
+    <p><a href="{{ content_profile.url }}">{{ content_profile.url }}</a></p>
     <h3>Number of viewers who dismissed the overlay vs. those who did not</h3>
     <p><div id="chart_div"></div></p>
-    <h3>Paste this code on your site</h3>
-    <p><textarea disabled="true" rows="10" cols="80" class="span">some js code here</textarea></p>
     <h3>Content stored</h3>
     <p><textarea disabled="true" rows="10" cols="80" class="span">{{ content_profile.content }}</textarea></p>
+    <br/>
+    {% if pcu_entities %}
+    	<h3>Content Units</h3>
+    	<br/>
+    	<table class='table table-bordered table-striped content_profiles_list'>
+    		{% for pcu in pcu_entities %}
+    			{{ pcu.url }}
+    		{% endfor %}
+    	</table>
+    {% endif %}
     <a href="" class="btn btn-danger confirm">Delete profile</a>
 
 {#    {% url content_profile_drop id=content_profile.id%}#}
