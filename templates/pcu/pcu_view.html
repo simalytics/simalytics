@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block head %}
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript" src="/static/js/bootbox.min.js"></script>
+{% endblock %}
+
+{% block content %}
+    <h3>Paid Content Unit</h3>
+    <p><b>URL:</b>&nbsp;{{ pcu.url }}</p>
+    <p><b>Public key:</b>&nbsp;{{ pcu.publicKey }}</p>
+    <p><b>Identifier:</b>&nbsp;{{ pcu.pcuIdentifier }}</p>
+    <h3>Interactions over Time</h3>
+    <p><div id="chart_div"></div></p>
+    
+{#    {% url content_profile_drop id=content_profile.id%}#}
+{% if pstats %}
+    <script type="text/javascript">
+      google.load('visualization', '1.0', {'packages':['corechart']});
+      google.setOnLoadCallback(drawChart);
+      function drawChart() {
+          var data = google.visualization.arrayToDataTable([
+              ['date', 'overlayOpenClicks', 'acceptClicks', 'declineClicks', 'moreInformationClicks'],
+              {% for s in pstats %}
+                  ['{{s.action_datetime}}', {{s.overlayOpenClicks}}, {{s.acceptClicks}}, {{s.declineClicks}}, {{s.moreInformationClicks}} ], 
+              {% endfor %}
+            ]);
+
+            var options = {
+              title: '',
+              width:700,
+              vAxis: {
+                 viewWindow:{min:0},
+              },
+            };
+
+            var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+            chart.draw(data, options);
+      }
+
+    </script>
+
+{% endif %}
+
+{% endblock %}
+{% block bottom-bar %}
+
+        <td valign="bottom">
+            <div class="bottombar" >
+                <div class="bottombar-inner">
+                    <div class="foot-container">
+                      <hr/>
+                        <a href="/legal/">Legal</a>&nbsp;|&nbsp;<a href="/privacy_policy/">Privacy Policy</a>&nbsp;|&nbsp;<a href="/contact/">Contact</a>
+                    </div>
+                </div>
+            </div>
+
+        </td>
+{% endblock %}

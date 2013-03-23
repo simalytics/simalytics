@@ -16,12 +16,70 @@ import logging
 from bs4 import BeautifulSoup
 import urllib
 import time
+from pcu.pcu_model import PCUAnalytics
+from pcu.pcu_model import PCU
+from traceback import print_exc
 
 import inspect
 
+def generate_stats(analytics):
+    daysago6 = datetime.today() - timedelta(days=6)
+    curdate = daysago6
+    pstats = list()
+    
+    for stat in analytics:
+        gapsize = (stat.hour - curdate).days
+        if gapsize > 0:
+            dategap = [curdate + timedelta(days=x) for x in range(0, gapsize + 1)]
+            for dg in [datetime.strftime(x, '%b %d') for x in dategap]:
+                pstats.append({
+                       'action_datetime':dg, 
+                       'overlayOpenClicks': 0, 
+                       'acceptClicks': 0,
+                       'declineClicks': 0,
+                       'moreInformationClicks': 0
+                })
+    
+        rectime = stat.hour
+        rectimestr = datetime.strftime(rectime, '%b %d')
+        pstats.append({
+                       'action_datetime':rectimestr, 
+                       'overlayOpenClicks': stat.overlayOpenClicks if stat.overlayOpenClicks else 0, 
+                       'acceptClicks': stat.acceptClicks if stat.acceptClicks else 0,
+                       'declineClicks': stat.declineClicks if stat.declineClicks else 0,
+                       'moreInformationClicks': stat.moreInformationClicks if stat.moreInformationClicks else 0
+        })
+        curdate = stat.hour + timedelta(days=1)
+    
+        gapsize = (datetime.today() - curdate).days
+        if gapsize > 0:
+            dategap = [curdate + timedelta(days=x) for x in range(0, gapsize + 1)]
+            for dg in [datetime.strftime(x, '%b %d') for x in dategap]:
+                pstats.append({
+                           'action_datetime':dg, 
+                           'overlayOpenClicks': 0, 
+                           'acceptClicks': 0,
+                           'declineClicks': 0,
+                           'moreInformationClicks': 0
+                })
+        else:
+            gapsize = (datetime.today() - daysago6).days
+            if gapsize > 0:
+                dategap = [curdate + timedelta(days=x) for x in range(0, gapsize + 1)]
+                for dg in [datetime.strftime(x, '%b %d') for x in dategap]:
+                    pstats.append({
+                               'action_datetime':dg, 
+                               'overlayOpenClicks': 0, 
+                               'acceptClicks': 0,
+                               'declineClicks': 0,
+                               'moreInformationClicks': 0
+                    })
+    
+    return pstats
+
 @login_required()
 def content_profile_list(request):
-    content_profiles_full = ContentProfile.objects.filter(created_by = request.user)
+    content_profiles_full = ContentProfile.objects.filter(created_by=request.user)
     paginator = Paginator(content_profiles_full, settings.PROFILES_PER_PAGE)
     page = request.GET.get('page')
     try:
@@ -65,7 +123,7 @@ def content_profile_add(request):
             new_profile.name = title.renderContents()
             
             # Private key generation (currently just sys time)
-            pKey = int(round(time.time() * 1000)) # TODO: FIX!
+            pKey = int(round(time.time() * 1000))  # TODO: FIX!
             new_profile.privateKey = pKey
 
             new_profile.status = 0
@@ -91,41 +149,29 @@ def content_profile_view(request, id):
     print "Viewing %s" % id
     
     try:
-        content_profile = ContentProfile.objects.get(pk = id)
+        content_profile = ContentProfile.objects.get(pk=id)
+        if not content_profile:
+            return Http404()
         
-        daysago6 = datetime.today() - timedelta(days=6)
-        stats = Action.objects.filter(profile=content_profile.pk, action_datetime__gte=daysago6,action_datetime__lte=datetime.today()).extra({'action_datetime' : "date(action_datetime)"}).values('action_datetime').annotate(seen=Sum('is_seen'),read=Sum('is_read')).order_by('action_datetime')
+        
+        stats = None  # Action.objects.filter(profile=content_profile.pk, action_datetime__gte=daysago6,action_datetime__lte=datetime.today()).extra({'action_datetime' : "date(action_datetime)"}).values('action_datetime').annotate(seen=Sum('is_seen'),read=Sum('is_read')).order_by('action_datetime')
         pstats = list()
-        curdate = daysago6
+        
+        
+        profilePcus = PCU.objects.filter(profile = content_profile)
+        print "Retrieved %d PCUs for profile %d" % (len(profilePcus), content_profile.id)
+        
+        stats = PCUAnalytics.objects.filter(pcu__in = profilePcus)
+        
+        print "Stats: %d" % len(stats)
         
         if stats:
-            for stat in stats:
-                gapsize = (datetime.strptime(stat['action_datetime'],'%Y-%m-%d')-curdate).days
-                if gapsize > 0:
-                    dategap = [curdate + timedelta(days=x) for x in range(0,gapsize+1)]
-                    for dg in [datetime.strftime(x,'%b %d') for x in dategap]:
-                        pstats.append({'action_datetime':dg, 'seen':0, 'read':0})
-
-                rectime = datetime.strptime(stat['action_datetime'],'%Y-%m-%d')
-                rectimestr = datetime.strftime(rectime, '%b %d')
-                pstats.append({'action_datetime':rectimestr, 'seen':stat['seen'], 'read':stat['read']})
-                curdate = datetime.strptime(stat['action_datetime'],'%Y-%m-%d') + timedelta(days=1)
-
-            gapsize = (datetime.today()-curdate).days
-            if gapsize > 0:
-                dategap = [curdate + timedelta(days=x) for x in range(0,gapsize+1)]
-                for dg in [datetime.strftime(x,'%b %d') for x in dategap]:
-                    pstats.append({'action_datetime':dg, 'seen':0, 'read':0})
-        else:
-            gapsize = (datetime.today() - daysago6).days
-            if gapsize > 0:
-                dategap = [curdate + timedelta(days=x) for x in range(0,gapsize+1)]
-                for dg in [datetime.strftime(x,'%b %d') for x in dategap]:
-                    pstats.append({'action_datetime':dg, 'seen':0, 'read':0})
+            graphData = generate_stats(stats)
 
     except Exception, e:
         # TODO: replace with proper logging! :@
         print "Error retrieving profile! [%s]" % e
+        print_exc()
         raise Http404
 
     request.breadcrumbs([
@@ -133,20 +179,33 @@ def content_profile_view(request, id):
         (content_profile.name, ''),
     ])
 
-    return render_to_response('content_profiles/content_profile_view.html',
-        {
+    return render_to_response('content_profiles/content_profile_view.html', {
             'content_profile': content_profile,
-            'pstats': pstats
-            },
+            'pcu_entities': profilePcus,
+            'pstats': graphData if graphData else None
+        },
         context_instance=RequestContext(request))
 
 @login_required()
 def content_profile_drop(request, id):
     try:
-        content_profile = ContentProfile.objects.get(pk = id)
+        content_profile = ContentProfile.objects.get(pk=id)
         if content_profile.created_by == request.user:
             content_profile.delete()
             return HttpResponseRedirect(reverse('content_profiles_list'))
     except Exception, e:
         raise Http404
     return render_to_response('content_profiles/content_profile_drop.html')
+
+def pcu_view(request, pcu_id):
+    print "Viewing PCU %s" % pcu_id
+    
+    pcu = PCU.objects.get(pk = pcu_id)
+    
+    analyticsRaw = PCUAnalytics.objects.filter(pcu = pcu)
+    graphData = generate_stats(analyticsRaw)
+    
+    return render_to_response('pcu/pcu_view.html', {
+        'pcu': pcu,
+        'pstats': graphData if graphData else None
+    })

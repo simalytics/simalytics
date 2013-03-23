@@ -19,7 +19,7 @@
     	<br/>
     	<table class='table table-bordered table-striped content_profiles_list'>
     		{% for pcu in pcu_entities %}
-    			{{ pcu.url }}
+    			<a href="/content_profiles/pcu/{{ pcu.id }}/view/">{{ pcu.url }}</a>
     		{% endfor %}
     	</table>
     {% endif %}
@@ -27,30 +27,32 @@
 
 {#    {% url content_profile_drop id=content_profile.id%}#}
 {% if pstats %}
-    <script type="text/javascript">
-      google.load('visualization', '1.0', {'packages':['corechart']});
-      google.setOnLoadCallback(drawChart);
-      function drawChart() {
-          var data = google.visualization.arrayToDataTable([
-              ['date', 'seen', 'read'],
-              {% for s in pstats %}
-                  ['{{s.action_datetime}}', {{s.seen}}, {{s.read}}], 
-              {% endfor %}
-            ]);
 
-            var options = {
-              title: '',
-              width:700,
-              vAxis: {
-                 viewWindow:{min:0},
-              },
-            };
+<script type="text/javascript">
+google.load('visualization', '1.0', {'packages':['corechart']});
+google.setOnLoadCallback(drawChart);
+function drawChart() {
+    var data = google.visualization.arrayToDataTable([
+        ['date', 'overlayOpenClicks', 'acceptClicks', 'declineClicks', 'moreInformationClicks'],
+        {% for s in pstats %}
+            ['{{s.action_datetime}}', {{s.overlayOpenClicks}}, {{s.acceptClicks}}, {{s.declineClicks}}, {{s.moreInformationClicks}} ], 
+        {% endfor %}
+      ]);
 
-            var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-            chart.draw(data, options);
-      }
+      var options = {
+        title: '',
+        width:700,
+        vAxis: {
+           viewWindow:{min:0},
+        },
+      };
+
+      var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+      chart.draw(data, options);
+}
 
     </script>
+    
 
 {% endif %}
 
