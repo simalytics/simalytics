@@ -24,8 +24,9 @@ class PCU(models.Model):
         db_table = "T_PCU"
         
 class PCUAnalytics(models.Model):
-    pcu = models.ForeignKey(PCU, editable=False, db_column="PCU_ID", primary_key=True)
-    hour = models.DateTimeField(db_column="HOUR", primary_key = True)
+    id = models.IntegerField(db_column = "ID", primary_key = True)
+    pcu = models.ForeignKey(PCU, editable=False, db_column="PCU_ID")
+    hour = models.DateTimeField(db_column="HOUR")
     overlayOpenClicks = models.IntegerField(db_column="OVERLAY_OPEN_CLICKS")
     acceptClicks = models.IntegerField(db_column="ACCEPT_CLICKS")
     moreInformationClicks = models.IntegerField(db_column="MORE_INFORMATION_CLICKS")

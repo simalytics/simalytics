@@ -19,63 +19,78 @@ import time
 from pcu.pcu_model import PCUAnalytics
 from pcu.pcu_model import PCU
 from traceback import print_exc
+from content_profiles import key_management
 
 import inspect
+from content_profiles.key_management import generate_profile_private_key
 
 def generate_stats(analytics):
     daysago6 = datetime.today() - timedelta(days=6)
     curdate = daysago6
-    pstats = list()
+    pstats = {}
     
     for stat in analytics:
         gapsize = (stat.hour - curdate).days
         if gapsize > 0:
             dategap = [curdate + timedelta(days=x) for x in range(0, gapsize + 1)]
             for dg in [datetime.strftime(x, '%b %d') for x in dategap]:
-                pstats.append({
-                       'action_datetime':dg, 
-                       'overlayOpenClicks': 0, 
-                       'acceptClicks': 0,
-                       'declineClicks': 0,
-                       'moreInformationClicks': 0
-                })
+                if not dg in pstats:
+                    pstats[dg] = {
+                           'overlayOpenClicks': 0, 
+                           'acceptClicks': 0,
+                           'declineClicks': 0,
+                           'moreInformationClicks': 0
+                   }
     
         rectime = stat.hour
         rectimestr = datetime.strftime(rectime, '%b %d')
-        pstats.append({
-                       'action_datetime':rectimestr, 
-                       'overlayOpenClicks': stat.overlayOpenClicks if stat.overlayOpenClicks else 0, 
-                       'acceptClicks': stat.acceptClicks if stat.acceptClicks else 0,
-                       'declineClicks': stat.declineClicks if stat.declineClicks else 0,
-                       'moreInformationClicks': stat.moreInformationClicks if stat.moreInformationClicks else 0
-        })
+        
+        overlayOpenClicks = stat.overlayOpenClicks if stat.overlayOpenClicks else 0
+        acceptClicks = stat.acceptClicks if stat.acceptClicks else 0
+        declineClicks = stat.declineClicks if stat.declineClicks else 0
+        moreInformationClicks = stat.moreInformationClicks if stat.moreInformationClicks else 0
+        pstats[rectimestr] = {
+                       'overlayOpenClicks': (pstats[rectimestr]["overlayOpenClicks"] + overlayOpenClicks) if rectimestr in pstats else overlayOpenClicks, 
+                       'acceptClicks': (pstats[rectimestr]["acceptClicks"] + acceptClicks) if rectimestr in pstats else acceptClicks,
+                       'declineClicks': (pstats[rectimestr]["declineClicks"] + declineClicks) if rectimestr in pstats else declineClicks,
+                       'moreInformationClicks': (pstats[rectimestr]["moreInformationClicks"] + moreInformationClicks) if rectimestr in pstats else moreInformationClicks
+        }
         curdate = stat.hour + timedelta(days=1)
     
         gapsize = (datetime.today() - curdate).days
         if gapsize > 0:
             dategap = [curdate + timedelta(days=x) for x in range(0, gapsize + 1)]
             for dg in [datetime.strftime(x, '%b %d') for x in dategap]:
-                pstats.append({
-                           'action_datetime':dg, 
+                pstats[dg] = {
                            'overlayOpenClicks': 0, 
                            'acceptClicks': 0,
                            'declineClicks': 0,
                            'moreInformationClicks': 0
-                })
+                }
         else:
             gapsize = (datetime.today() - daysago6).days
             if gapsize > 0:
                 dategap = [curdate + timedelta(days=x) for x in range(0, gapsize + 1)]
                 for dg in [datetime.strftime(x, '%b %d') for x in dategap]:
-                    pstats.append({
+                    pstats[dg] = {
                                'action_datetime':dg, 
                                'overlayOpenClicks': 0, 
                                'acceptClicks': 0,
                                'declineClicks': 0,
                                'moreInformationClicks': 0
-                    })
+                    }
     
-    return pstats
+    stats = list()
+    for date in pstats.keys():
+        stats.append({
+            "action_datetime": date,
+            "overlayOpenClicks": pstats[date]["overlayOpenClicks"],
+            "acceptClicks": pstats[date]["acceptClicks"],
+            "declineClicks": pstats[date]["declineClicks"],
+            "moreInformationClicks": pstats[date]["moreInformationClicks"]
+        })
+    
+    return stats
 
 @login_required()
 def content_profile_list(request):
@@ -112,18 +127,20 @@ def content_profile_add(request):
 
             # Retrieve page title
             pageStructure = BeautifulSoup(urllib.urlopen(new_profile.url));
-            if not pageStructure:
+            if not pageStructure or not pageStructure.head:
                 # TODO return helpful error message to client
                 print "Could not retrieve"
+                raise Exception("Could not retrieve title from URL [%s]." % new_profile.url)
             title = pageStructure.head.title
             if not title:
                 # TODO return helpful error message to client
                 print "Could not retrieve title for %s" % new_profile.url
+                raise Exception("Could not retrieve title from URL [%s]." % new_profile.url)
             
             new_profile.name = title.renderContents()
             
             # Private key generation (currently just sys time)
-            pKey = int(round(time.time() * 1000))  # TODO: FIX!
+            pKey = generate_profile_private_key(new_profile)
             new_profile.privateKey = pKey
 
             new_profile.status = 0
@@ -165,6 +182,7 @@ def content_profile_view(request, id):
         
         print "Stats: %d" % len(stats)
         
+        graphData = None
         if stats:
             graphData = generate_stats(stats)
 
@@ -184,7 +202,7 @@ def content_profile_view(request, id):
             'pcu_entities': profilePcus,
             'pstats': graphData if graphData else None
         },
-        context_instance=RequestContext(request))
+        context_instance = RequestContext(request))
 
 @login_required()
 def content_profile_drop(request, id):
@@ -194,6 +212,7 @@ def content_profile_drop(request, id):
             content_profile.delete()
             return HttpResponseRedirect(reverse('content_profiles_list'))
     except Exception, e:
+        print "Error deleting content profile %s: %s" % (id, e)
         raise Http404
     return render_to_response('content_profiles/content_profile_drop.html')
 

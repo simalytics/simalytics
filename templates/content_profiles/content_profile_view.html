@@ -9,6 +9,8 @@
     <p>{{ content_profile.name }}</p>
     <h3>Website URL</h3>
     <p><a href="{{ content_profile.url }}">{{ content_profile.url }}</a></p>
+    <h3>Your PRIVATE Key</h3>
+    <p>{{ content_profile.privateKey }}
     <h3>Number of viewers who dismissed the overlay vs. those who did not</h3>
     <p><div id="chart_div"></div></p>
     <h3>Content stored</h3>
@@ -19,7 +21,9 @@
     	<br/>
     	<table class='table table-bordered table-striped content_profiles_list'>
     		{% for pcu in pcu_entities %}
-    			<a href="/content_profiles/pcu/{{ pcu.id }}/view/">{{ pcu.url }}</a>
+    			<p>
+    				<a href="/content_profiles/pcu/{{ pcu.id }}/view/">{{ pcu.url }}</a>
+   				</p>
     		{% endfor %}
     	</table>
     {% endif %}
@@ -35,8 +39,8 @@ function drawChart() {
     var data = google.visualization.arrayToDataTable([
         ['date', 'overlayOpenClicks', 'acceptClicks', 'declineClicks', 'moreInformationClicks'],
         {% for s in pstats %}
-            ['{{s.action_datetime}}', {{s.overlayOpenClicks}}, {{s.acceptClicks}}, {{s.declineClicks}}, {{s.moreInformationClicks}} ], 
-        {% endfor %}
+        	['{{s.action_datetime}}', {{s.overlayOpenClicks}}, {{s.acceptClicks}}, {{s.declineClicks}}, {{s.moreInformationClicks}} ],
+    	{% endfor %}
       ]);
 
       var options = {
