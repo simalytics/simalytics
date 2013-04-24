@@ -1,6 +1,7 @@
 from django.http import HttpResponse
 import json
 from content_profiles.models import ContentProfile
+from django.contrib.sites.models import Site
 
 def init_request(request, expectedMethod):
     if (request.method != expectedMethod):
@@ -44,3 +45,6 @@ def check_keys(json, expectedKeys):
 
 def generate_response(obj, statusCode):
     return HttpResponse(json.dumps(obj), "application/json", status = statusCode)
+
+def get_base_app_url(request):
+    return "http://%s" % request.get_host()
