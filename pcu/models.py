@@ -10,27 +10,25 @@ class PCUStatus(models.Model):
         db_table = "T_PCU_STATUS"
 
 class PCU(models.Model):
-    #id = models.IntegerField(db_column="ID")
     profile = models.ForeignKey(ContentProfile, editable=False, db_column="PROFILE_ID")
     publicKey = models.TextField(db_column="PUBLIC_KEY")
     url = models.URLField(db_column="URL")
     pcuIdentifier = models.TextField(db_column="PCU_IDENTIFIER")
     created = models.DateTimeField(auto_now = True, db_column = "CREATED")
-    modified = models.DateTimeField(db_column = "MODIFIED")
-    #status = models.ForeignKey(PCUStatus, db_column = "STATUS_ID")
-    status = models.IntegerField(db_column = "STATUS_ID")
+    modified = models.DateTimeField(editable=False, null = True, db_column = "MODIFIED")
+    status = models.ForeignKey(PCUStatus, db_column = "STATUS_ID")
     
     class Meta:
         db_table = "T_PCU"
         
 class PCUAnalytics(models.Model):
-    id = models.IntegerField(db_column = "ID", primary_key = True)
+    #id = models.IntegerField(db_column = "ID", primary_key = True)
     pcu = models.ForeignKey(PCU, editable=False, db_column="PCU_ID")
     hour = models.DateTimeField(db_column="HOUR")
     overlayOpenClicks = models.IntegerField(db_column="OVERLAY_OPEN_CLICKS")
-    acceptClicks = models.IntegerField(db_column="ACCEPT_CLICKS")
-    moreInformationClicks = models.IntegerField(db_column="MORE_INFORMATION_CLICKS")
-    declineClicks = models.IntegerField(db_column="DECLINE_CLICKS")
+    acceptClicks = models.IntegerField(null = True, db_column="ACCEPT_CLICKS")
+    moreInformationClicks = models.IntegerField(null = True, db_column="MORE_INFORMATION_CLICKS")
+    declineClicks = models.IntegerField(null = True, db_column="DECLINE_CLICKS")
     
     class Meta:
         db_table = "T_PCU_ANALYTICS"

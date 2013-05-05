@@ -13,8 +13,7 @@ class ContentProfile(models.Model):
     created_by = models.ForeignKey(User, editable=False, db_column = "USER_ID") 
     url = models.URLField(db_column = "URL")
     created_date = models.DateTimeField(auto_now=True, editable=False, db_column = "CREATED")
-    deleted_date = models.DateTimeField(auto_now=False, editable=False, db_column = "DELETED")
-    #status = models.ForeignKey(ContentProfileStatus, db_column = "STATUS_ID")
+    deleted_date = models.DateTimeField(auto_now=False, editable=False, null = True, db_column = "DELETED")
     status = models.IntegerField(db_column = "STATUS_ID")
     privateKey = models.TextField(editable=False, db_column = "PRIVATE_KEY")
     

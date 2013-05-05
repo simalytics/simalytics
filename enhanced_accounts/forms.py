@@ -5,12 +5,12 @@ from django.contrib.auth.models import User
 from django import forms
 from django.core.urlresolvers import reverse
 
-from registration.forms import RegistrationForm, RegistrationFormUniqueEmail
+from registration.forms import RegistrationForm, RegistrationFormUniqueEmail, RegistrationFormTermsOfService
 from crispy_forms.helper import FormHelper
 
 attrs_dict = { 'class': 'required' }
 
-class EnhancedRegistrationForm(RegistrationFormUniqueEmail):
+class EnhancedRegistrationForm(RegistrationFormUniqueEmail, RegistrationFormTermsOfService):
     '''
     We need to enhance generic form in django-registration to add crispy and hide username
     '''
@@ -24,16 +24,21 @@ class EnhancedRegistrationForm(RegistrationFormUniqueEmail):
                 'email',
                 'password1',
                 'password2',
+                'first_name',
+                'last_name',
                 'username',
+                
+                'tos'
             ),
             FormActions(
-                Submit('submit', 'Submit', css_class='button btn-primary'),
-
+                Submit('submit', 'Submit', css_class='button btn-primary')
             )
         )
         super(EnhancedRegistrationForm, self).__init__(*args, **kwargs)
 
     username = forms.CharField(widget=forms.HiddenInput, required=False)
+    first_name = forms.CharField(required=True)
+    last_name = forms.CharField(required=True)
 
     def clean_username(self):
         "This function is required to overwrite an inherited username clean"

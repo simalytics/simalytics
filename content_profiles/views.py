@@ -16,8 +16,7 @@ import logging
 from bs4 import BeautifulSoup
 import urllib
 import time
-from pcu.pcu_model import PCUAnalytics
-from pcu.pcu_model import PCU
+from pcu.models import PCUAnalytics, PCU
 from traceback import print_exc
 from content_profiles import key_management
 

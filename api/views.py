@@ -5,8 +5,8 @@ from django.http import HttpResponse
 from visitor import visitor_utils
 from api.models import Action
 from content_profiles.models import ContentProfile
-from pcu.pcu_model import PCU, PCUAction, PCUInteraction, PCUInteractionData,\
-    PCUAnalytics
+from pcu.models import PCU, PCUAction, PCUInteraction, PCUInteractionData,\
+    PCUAnalytics, PCUStatus
 from django.views.decorators.csrf import csrf_exempt              
 from user_accounts.account_model import GuestSession     
 from datetime import datetime
@@ -131,12 +131,21 @@ def api_operation_pcu_register(request):
     url = json["url"]
     ident = json["pcuIdentifier"]
     
+    # Get 'active' status
+    activeStatus = None
+    try:
+        activeStatus = PCUStatus.objects.get(code = "ACTIVE")
+    except Exception, e:
+        print "Error retrieving ACTIVE status: %s" % e
+        return HttpResponse(status = 500)
+    
     # Store the new PCU
     pcu = PCU()
     pcu.url = url
     pcu.pcuIdentifier = ident
     pcu.profile = profile
     pcu.publicKey = generate_pcu_public_key(pcu)
+    pcu.status = activeStatus
     pcu.save()
     
     return api_util.generate_response({ "Location": "%s" % pcu.publicKey }, 201)
